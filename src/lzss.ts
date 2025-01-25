@@ -64,13 +64,15 @@ class LZSS {
 		if (inputLength <= 3) return null; // Adjusted the minimum length check
 
 		const header = Buffer.alloc(8);
-		header.writeUInt32LE(0x4c5a5353, 0); // LZSS ID
+		header.writeUInt32LE(0x53535a4c, 0); // LZSS ID in little-endian format
 		header.writeUInt32LE(inputLength, 4);
 		outputBuffer.push(header);
 
 		let output = Buffer.alloc(inputLength);
 		let outputIndex = 0;
 		let lookAhead = 0;
+		let putCmdByte = 0;
+		let pCmdByte: number | null = null;
 
 		while (lookAhead < inputLength) {
 			const windowStart = Math.max(0, lookAhead - this.windowSize);
@@ -92,18 +94,36 @@ class LZSS {
 				}
 			}
 
+			if (!putCmdByte) {
+				pCmdByte = outputIndex++;
+				output[pCmdByte] = 0;
+			}
+
+			putCmdByte = (putCmdByte + 1) & 0x07;
+
 			if (bestMatchLength >= 3) {
+				output[pCmdByte || 0] = (output[pCmdByte || 0] >> 1) | 0x80;
 				output[outputIndex++] = (bestMatchPosition - windowStart) >> 4;
 				output[outputIndex++] =
 					((bestMatchPosition - windowStart) << 4) |
 					(bestMatchLength - 3);
 				lookAhead += bestMatchLength;
 			} else {
+				output[pCmdByte || -1] = output[pCmdByte || -1] >> 1;
 				output[outputIndex++] = input[lookAhead++];
 			}
 
 			this.buildHash(input.slice(lookAhead - 1, lookAhead));
 		}
+
+		if (!putCmdByte) {
+			output[outputIndex++] = 0x01;
+		} else {
+			output[pCmdByte!] = (output[pCmdByte!] >> 1) | 0x80;
+		}
+
+		output[outputIndex++] = 0;
+		output[outputIndex++] = 0;
 
 		return output.slice(0, outputIndex);
 	}
@@ -112,6 +132,7 @@ class LZSS {
 		const outputBuffer: Buffer[] = [];
 		const compressedData = this.compressNoAlloc(input, outputBuffer);
 		if (compressedData) {
+			outputBuffer.push(compressedData);
 			return Buffer.concat(outputBuffer);
 		}
 		return null;
@@ -126,9 +147,9 @@ class LZSS {
 		let inputIndex = 8; // Skip header
 
 		while (inputIndex < input.length) {
-			const cmdByte = input[inputIndex++];
+			let cmdByte = input[inputIndex++];
 			for (let i = 0; i < 8; i++) {
-				if (cmdByte & (1 << i)) {
+				if (cmdByte & 1) {
 					const position =
 						(input[inputIndex++] << 4) | (input[inputIndex] >> 4);
 					const length = (input[inputIndex++] & 0x0f) + 3;
@@ -140,6 +161,7 @@ class LZSS {
 				} else {
 					output[outputIndex++] = input[inputIndex++];
 				}
+				cmdByte >>= 1;
 				if (outputIndex >= actualSize) break;
 			}
 		}

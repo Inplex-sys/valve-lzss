@@ -61,7 +61,7 @@ class LZSS {
 		outputBuffer: Buffer[]
 	): Buffer | null {
 		const inputLength = input.length;
-		if (inputLength <= 12) return null;
+		if (inputLength <= 3) return null; // Adjusted the minimum length check
 
 		const header = Buffer.alloc(8);
 		header.writeUInt32LE(0x4c5a5353, 0); // LZSS ID
@@ -111,7 +111,10 @@ class LZSS {
 	compress(input: Buffer): Buffer | null {
 		const outputBuffer: Buffer[] = [];
 		const compressedData = this.compressNoAlloc(input, outputBuffer);
-		return compressedData ? Buffer.concat(outputBuffer) : null;
+		if (compressedData) {
+			return Buffer.concat(outputBuffer);
+		}
+		return null;
 	}
 
 	uncompress(input: Buffer): Buffer | null {

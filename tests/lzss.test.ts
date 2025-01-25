@@ -56,7 +56,9 @@ describe("LZSS", () => {
 			const inputBuffer = Buffer.from("aabcaabc");
 			const lzss = new LZSS();
 			const compressedBuffer = lzss.compress(inputBuffer);
+			console.log("compresed: ", compressedBuffer);
 			const uncompressedBuffer = lzss.uncompress(compressedBuffer!);
+
 			expect(uncompressedBuffer).not.toBeNull();
 			expect(uncompressedBuffer).toBeInstanceOf(Buffer);
 			expect(uncompressedBuffer!.toString()).toBe(inputBuffer.toString());

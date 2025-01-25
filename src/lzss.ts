@@ -61,10 +61,10 @@ class LZSS {
 		outputBuffer: Buffer[]
 	): Buffer | null {
 		const inputLength = input.length;
-		if (inputLength <= 3) return null; // Adjusted the minimum length check
+		if (inputLength <= 3) return null;
 
 		const header = Buffer.alloc(8);
-		header.writeUInt32LE(0x53535a4c, 0); // LZSS ID in little-endian format
+		header.writeUInt32LE(0x53535a4c, 0);
 		header.writeUInt32LE(inputLength, 4);
 		outputBuffer.push(header);
 
@@ -109,7 +109,7 @@ class LZSS {
 					(bestMatchLength - 3);
 				lookAhead += bestMatchLength;
 			} else {
-				output[pCmdByte || -1] = output[pCmdByte || -1] >> 1;
+				output[pCmdByte || 0] = output[pCmdByte || 0] >> 1;
 				output[outputIndex++] = input[lookAhead++];
 			}
 

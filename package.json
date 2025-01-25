@@ -1,0 +1,11 @@
+{
+  "name": "lzss-nodejs",
+  "module": "src/main.ts",
+  "type": "module",
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "bun-types": "^1.2.0"
+  }
+}

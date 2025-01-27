@@ -1,191 +1,96 @@
 class LZSS {
-	private windowSize: number;
-	private hashTable: { start: any; end: any }[];
-	private hashTarget: { data: any; prev: any; next: any }[];
+	private readonly WINDOW_SIZE = 4096;
+	private readonly LOOKAHEAD_SIZE = 18;
+	private readonly MIN_MATCH = 3;
+	private readonly WINDOW_MASK = this.WINDOW_SIZE - 1;
 
-	constructor(windowSize: number = 65536) {
-		this.windowSize = windowSize;
-		this.hashTable = new Array(256)
-			.fill(null)
-			.map(() => ({ start: null, end: null }));
-		this.hashTarget = new Array(windowSize)
-			.fill(null)
-			.map(() => ({ data: null, prev: null, next: null }));
-	}
+	compress(input: Uint8Array): Uint8Array {
+		const buffer = new Array<number>(this.WINDOW_SIZE);
+		const output: number[] = [];
+		let pos = 0;
+		let bufferPos = 0;
 
-	static isCompressed(input: Buffer): boolean {
-		const header = input.slice(0, 4);
-		return (
-			header[0] === 0x4c &&
-			header[1] === 0x5a &&
-			header[2] === 0x53 &&
-			header[3] === 0x53
-		);
-	}
+		while (pos < input.length) {
+			let bestLength = 0;
+			let bestOffset = 0;
 
-	static getActualSize(input: Buffer): number {
-		if (!this.isCompressed(input)) return 0;
-		return input.readUInt32LE(4);
-	}
+			// Find longest match
+			for (let i = 1; i <= this.WINDOW_SIZE; i++) {
+				const maxLength = Math.min(
+					this.LOOKAHEAD_SIZE,
+					input.length - pos
+				);
+				let currentLength = 0;
 
-	private buildHash(data: Buffer): void {
-		const index = data[0] & (this.windowSize - 1);
-		const target = this.hashTarget[index];
-
-		if (target.data) {
-			const list = this.hashTable[target.data[0]];
-			if (target.prev) {
-				list.end = target.prev;
-				target.prev.next = null;
-			} else {
-				list.end = null;
-				list.start = null;
-			}
-		}
-
-		const list = this.hashTable[data[0]];
-		target.data = data;
-		target.prev = null;
-		target.next = list.start;
-
-		if (list.start) {
-			list.start.prev = target;
-		} else {
-			list.end = target;
-		}
-		list.start = target;
-	}
-
-	private compressNoAlloc(
-		input: Buffer,
-		outputBuffer: Buffer[]
-	): Buffer | null {
-		const inputLength = input.length;
-		if (inputLength <= 3) return null;
-
-		const header = Buffer.alloc(8);
-		header.writeUInt32LE(0x53535a4c, 0);
-		header.writeUInt32LE(inputLength, 4);
-		outputBuffer.push(header);
-
-		let output = Buffer.alloc(inputLength);
-		let outputIndex = 0;
-		let lookAhead = 0;
-		let putCmdByte = 0;
-		let pCmdByte: number | null = null;
-
-		while (lookAhead < inputLength) {
-			const windowStart = Math.max(0, lookAhead - this.windowSize);
-			const lookAheadLength = Math.min(inputLength - lookAhead, 16);
-			let bestMatchLength = 0;
-			let bestMatchPosition = -1;
-
-			for (let i = windowStart; i < lookAhead; i++) {
-				let matchLength = 0;
 				while (
-					matchLength < lookAheadLength &&
-					input[i + matchLength] === input[lookAhead + matchLength]
+					currentLength < maxLength &&
+					input[pos + currentLength] ===
+						buffer[
+							(bufferPos - i + currentLength) & this.WINDOW_MASK
+						]
 				) {
-					matchLength++;
+					currentLength++;
 				}
-				if (matchLength > bestMatchLength) {
-					bestMatchLength = matchLength;
-					bestMatchPosition = i;
+
+				if (currentLength > bestLength) {
+					bestLength = currentLength;
+					bestOffset = i;
 				}
 			}
 
-			if (!putCmdByte) {
-				pCmdByte = outputIndex++;
-				output[pCmdByte] = 0;
-			}
+			if (bestLength >= this.MIN_MATCH) {
+				output.push(1);
+				output.push(bestOffset >> 8);
+				output.push(bestOffset & 0xff);
+				output.push(bestLength);
 
-			putCmdByte = (putCmdByte + 1) & 0x07;
-
-			if (bestMatchLength >= 3) {
-				output[pCmdByte || 0] = (output[pCmdByte || 0] >> 1) | 0x80;
-				output[outputIndex++] = (bestMatchPosition - windowStart) >> 4;
-				output[outputIndex++] =
-					((bestMatchPosition - windowStart) << 4) |
-					(bestMatchLength - 3);
-				lookAhead += bestMatchLength;
+				for (let i = 0; i < bestLength; i++) {
+					buffer[bufferPos] = input[pos + i];
+					bufferPos = (bufferPos + 1) & this.WINDOW_MASK;
+				}
+				pos += bestLength;
 			} else {
-				output[pCmdByte || 0] = output[pCmdByte || 0] >> 1;
-				output[outputIndex++] = input[lookAhead++];
+				output.push(0);
+				output.push(input[pos]);
+				buffer[bufferPos] = input[pos];
+				bufferPos = (bufferPos + 1) & this.WINDOW_MASK;
+				pos++;
 			}
-
-			this.buildHash(input.slice(lookAhead - 1, lookAhead));
 		}
 
-		if (!putCmdByte) {
-			output[outputIndex++] = 0x01;
-		} else {
-			output[pCmdByte!] = (output[pCmdByte!] >> 1) | 0x80;
-		}
-
-		output[outputIndex++] = 0;
-		output[outputIndex++] = 0;
-
-		return output.slice(0, outputIndex);
+		return new Uint8Array(output);
 	}
 
-	compress(input: Buffer): Buffer | null {
-		const outputBuffer: Buffer[] = [];
-		const compressedData = this.compressNoAlloc(input, outputBuffer);
-		if (compressedData) {
-			outputBuffer.push(compressedData);
-			return Buffer.concat(outputBuffer);
-		}
+	decompress(input: Uint8Array): Uint8Array {
+		const buffer = new Array<number>(this.WINDOW_SIZE);
+		const output: number[] = [];
+		let pos = 0;
+		let bufferPos = 0;
 
-		return null;
-	}
+		while (pos < input.length) {
+			const flag = input[pos++];
 
-	uncompress(input: Buffer): Buffer | null {
-		const actualSize = LZSS.getActualSize(input);
-		if (!actualSize) return null;
+			if (flag === 1) {
+				const offset = (input[pos] << 8) | input[pos + 1];
+				const length = input[pos + 2];
+				pos += 3;
 
-		let pInput = 8;
-		let pOutput = 0;
-		let totalBytes = 0;
-		let cmdByte = 0;
-		let getCmdByte = 0;
-
-		const output = Buffer.alloc(actualSize);
-
-		while (true) {
-			if (!getCmdByte) {
-				cmdByte = input[pInput++];
-			}
-			getCmdByte = (getCmdByte + 1) & 0x07;
-
-			if (cmdByte & 0x01) {
-				let position = input[pInput++] << 4;
-				position |= input[pInput] >> 4;
-				let count = (input[pInput++] & 0x0f) + 1;
-				if (count === 1) {
-					break;
+				for (let i = 0; i < length; i++) {
+					const value =
+						buffer[(bufferPos - offset + i) & this.WINDOW_MASK];
+					output.push(value);
+					buffer[bufferPos] = value;
+					bufferPos = (bufferPos + 1) & this.WINDOW_MASK;
 				}
-				let pSource = pOutput - position - 1;
-				for (let i = 0; i < count; i++) {
-					output[pOutput++] = output[pSource++];
-				}
-				totalBytes += count;
 			} else {
-				output[pOutput++] = input[pInput++];
-				totalBytes++;
-			}
-
-			cmdByte = cmdByte >> 1;
-
-			if (pOutput >= actualSize) {
-				break;
+				const value = input[pos++];
+				output.push(value);
+				buffer[bufferPos] = value;
+				bufferPos = (bufferPos + 1) & this.WINDOW_MASK;
 			}
 		}
 
-		if (totalBytes !== actualSize) {
-			return null;
-		}
-
-		return output;
+		return new Uint8Array(output);
 	}
 }
 

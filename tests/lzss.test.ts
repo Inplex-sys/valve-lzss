@@ -1,6 +1,6 @@
 import { describe, beforeEach, it, expect } from "bun:test";
 
-import LZSS from "../src/lzss";
+import LZSS from "../src/main";
 
 describe("LZSS", () => {
 	let lzss: LZSS;

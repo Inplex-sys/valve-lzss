@@ -1,4 +1,4 @@
-class LZSS {
+export default class LZSS {
 	private readonly WINDOW_SIZE = 4096;
 	private readonly LOOKAHEAD_SIZE = 18;
 	private readonly MIN_MATCH = 3;
@@ -93,5 +93,3 @@ class LZSS {
 		return new Uint8Array(output);
 	}
 }
-
-export default LZSS;

@@ -16,8 +16,6 @@ A TypeScript implementation of the LZSS (Lempel-Ziv-Storer-Szymanski) compressio
 bun install lzss
 ```
 
-````
-
 ## Usage Examples
 
 ### Basic Compression
@@ -163,4 +161,3 @@ Contributions are welcome! Please feel free to submit pull requests.
 ## Acknowledgements
 
 This project was created using `bun init` in bun v1.2. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.
-````

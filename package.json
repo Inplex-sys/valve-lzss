@@ -1,8 +1,9 @@
 {
-  "name": "lzss-nodejs",
+  "name": "@inplex-sys/lzss",
   "description": "LZSS compression algorithm implementation in Javascript",
   "module": "src/main.ts",
   "type": "module",
+  "version": "1.0.1",
   "keywords": [
     "lzss",
     "compression",

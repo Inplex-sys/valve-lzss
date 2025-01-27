@@ -1,7 +1,7 @@
 # LZSS Compression Library
 
 ```diff
-- Passing 7/8 tests
++ Passing 8/8 tests
 ```
 
 This project implements the LZSS compression algorithm in TypeScript. It provides functionality to compress and decompress data using the LZSS algorithm.

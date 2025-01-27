@@ -13,7 +13,7 @@ A TypeScript implementation of the LZSS (Lempel-Ziv-Storer-Szymanski) compressio
 ## Installation
 
 ```bash
-bun install lzss
+bun install @inplex-sys/lzss
 ```
 
 ## Usage Examples

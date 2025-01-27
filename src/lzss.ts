@@ -143,30 +143,41 @@ class LZSS {
 		const actualSize = LZSS.getActualSize(input);
 		if (!actualSize) return null;
 
+		let pInput = 8;
+		let pOutput = 0;
+		let totalBytes = 0;
+		let cmdByte = 0;
+		let getCmdByte = 0;
+
 		const output = Buffer.alloc(actualSize);
-		let outputIndex = 0;
-		let inputIndex = 8; // Skip header
 
-		while (inputIndex < input.length) {
-			let cmdByte = input[inputIndex++];
-
-			console.log(cmdByte);
-			for (let i = 0; i < 8; i++) {
-				if (cmdByte & 1) {
-					const position =
-						(input[inputIndex++] << 4) | (input[inputIndex] >> 4);
-					const length = (input[inputIndex++] & 0x0f) + 3;
-					const sourceIndex = outputIndex - position - 1;
-
-					for (let j = 0; j < length; j++) {
-						output[outputIndex++] = output[sourceIndex + j];
-					}
-				} else {
-					output[outputIndex++] = input[inputIndex++];
-				}
-				cmdByte >>= 1;
-				if (outputIndex >= actualSize) break;
+		while (true) {
+			if (!getCmdByte) {
+				cmdByte = input[pInput++];
 			}
+			getCmdByte = (getCmdByte + 1) & 0x07;
+
+			if (cmdByte & 0x01) {
+				let position = input[pInput++] << 4;
+				position |= input[pInput] >> 4;
+				let count = (input[pInput++] & 0x0f) + 1;
+				if (count === 1) {
+					break;
+				}
+				let pSource = pOutput - position - 1;
+				for (let i = 0; i < count; i++) {
+					output[pOutput++] = output[pSource++];
+				}
+				totalBytes += count;
+			} else {
+				output[pOutput++] = input[pInput++];
+				totalBytes++;
+			}
+			cmdByte = cmdByte >> 1;
+		}
+
+		if (totalBytes !== actualSize) {
+			return null;
 		}
 
 		return output;

@@ -173,7 +173,12 @@ class LZSS {
 				output[pOutput++] = input[pInput++];
 				totalBytes++;
 			}
+
 			cmdByte = cmdByte >> 1;
+
+			if (pOutput >= actualSize) {
+				break;
+			}
 		}
 
 		if (totalBytes !== actualSize) {

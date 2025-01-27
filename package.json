@@ -1,11 +1,39 @@
 {
   "name": "lzss-nodejs",
+  "version": "1.0.0",
+  "description": "LZSS compression algorithm implementation in JavaScript",
   "module": "src/main.ts",
+  "main": "dist/main.js",
   "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "start": "node dist/main.js"
+  },
+  "keywords": [
+    "lzss",
+    "compression",
+    "algorithm",
+    "typescript"
+  ],
+  "author": {
+    "name": "Inplex-sys",
+    "email": "anthill-spud-puma@duck.com"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Inplex-sys/lzss.git"
+  },
   "peerDependencies": {
     "typescript": "^5.0.0"
   },
   "dependencies": {
     "bun-types": "^1.2.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "jest": "^29.0.0",
+    "@types/jest": "^29.0.0"
   }
 }

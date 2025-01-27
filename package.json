@@ -1,9 +1,20 @@
 {
   "name": "@inplex-sys/lzss",
+  "version": "1.0.5",
+  "author": {
+    "name": "Inplex-sys",
+    "email": "anthill-spud-puma@duck.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Inplex-sys/lzss.git"
+  },
+  "module": "src/main.js",
+  "types": "src/main.d.ts",
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
   "description": "LZSS compression algorithm implementation in Javascript",
-  "module": "src/main.ts",
-  "type": "module",
-  "version": "1.0.3",
   "keywords": [
     "lzss",
     "compression",
@@ -12,18 +23,8 @@
     "valve",
     "source-engine"
   ],
-  "author": {
-    "name": "Inplex-sys",
-    "email": "anthill-spud-puma@duck.com"
-  },
   "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Inplex-sys/lzss.git"
-  },
-  "peerDependencies": {
-    "typescript": "^5.0.0"
-  },
+  "type": "module",
   "dependencies": {
     "bun-types": "^1.2.0"
   }

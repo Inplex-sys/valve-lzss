@@ -1,9 +1,28 @@
+/**
+ * Implementation of the valve version of Lempel-Ziv-Storer-Szymanski (LZSS) compression algorithm.
+ * LZSS is a dictionary-based compression algorithm that improves upon LZ77 by
+ * not encoding matches that are too short.
+ *
+ * @version 1.0.5
+ */
 export default class LZSS {
 	private readonly WINDOW_SIZE = 4096;
 	private readonly LOOKAHEAD_SIZE = 18;
 	private readonly MIN_MATCH = 3;
 	private readonly WINDOW_MASK = this.WINDOW_SIZE - 1;
 
+	/**
+	 * Compresses the input data using LZSS algorithm.
+	 *
+	 * @param input - The data to compress as a Uint8Array
+	 * @returns A compressed version of the input as Uint8Array
+	 *
+	 * @example
+	 * ```typescript
+	 * const lzss = new LZSS();
+	 * const compressed = lzss.compress(new Uint8Array([1,2,3,4,5]));
+	 * ```
+	 */
 	compress(input: Uint8Array): Uint8Array {
 		const buffer = new Array<number>(this.WINDOW_SIZE);
 		const output: number[] = [];
@@ -61,6 +80,18 @@ export default class LZSS {
 		return new Uint8Array(output);
 	}
 
+	/**
+	 * Decompresses LZSS-compressed data.
+	 *
+	 * @param input - The compressed data as a Uint8Array
+	 * @returns The original, decompressed data as Uint8Array
+	 *
+	 * @example
+	 * ```typescript
+	 * const lzss = new LZSS();
+	 * const decompressed = lzss.decompress(compressed);
+	 * ```
+	 */
 	decompress(input: Uint8Array): Uint8Array {
 		const buffer = new Array<number>(this.WINDOW_SIZE);
 		const output: number[] = [];

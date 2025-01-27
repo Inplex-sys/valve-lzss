@@ -135,6 +135,7 @@ class LZSS {
 			outputBuffer.push(compressedData);
 			return Buffer.concat(outputBuffer);
 		}
+
 		return null;
 	}
 
@@ -148,6 +149,8 @@ class LZSS {
 
 		while (inputIndex < input.length) {
 			let cmdByte = input[inputIndex++];
+
+			console.log(cmdByte);
 			for (let i = 0; i < 8; i++) {
 				if (cmdByte & 1) {
 					const position =

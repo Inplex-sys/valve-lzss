@@ -53,10 +53,9 @@ describe("LZSS", () => {
 
 	describe("uncompress", () => {
 		it("should uncompress and return the original buffer", () => {
-			const inputBuffer = Buffer.from("aabcaabc");
+			const inputBuffer = Buffer.from("123456789");
 			const lzss = new LZSS();
 			const compressedBuffer = lzss.compress(inputBuffer);
-			console.log("compresed: ", compressedBuffer);
 			const uncompressedBuffer = lzss.uncompress(compressedBuffer!);
 
 			expect(uncompressedBuffer).not.toBeNull();

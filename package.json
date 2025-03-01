@@ -1,13 +1,13 @@
 {
-  "name": "@inplex-sys/lzss",
-  "version": "1.0.5",
+  "name": "valve-lzss",
+  "version": "1.0.7",
   "author": {
     "name": "Inplex-sys",
     "email": "anthill-spud-puma@duck.com"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Inplex-sys/lzss.git"
+    "url": "git+https://github.com/Inplex-sys/valve-lzss.git"
   },
   "module": "src/main.js",
   "types": "src/main.d.ts",

@@ -21,7 +21,7 @@ bun install valve-lzss
 ### Basic Compression
 
 ```typescript
-import LZSS from "lzss-nodejs";
+import LZSS from "valve-lzss";
 
 const lzss = new LZSS();
 
@@ -45,7 +45,7 @@ console.log(
 ### Compressing Files
 
 ```typescript
-import LZSS from "lzss-nodejs";
+import LZSS from "valve-lzss";
 import { readFileSync, writeFileSync } from "fs";
 
 const lzss = new LZSS();
